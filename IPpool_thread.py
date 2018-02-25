@@ -94,11 +94,12 @@ def Go(testurl):
 
     with open("./CrawIP.bi","wb") as fp:
         pickle.dump(useful,fp)
-    print('this time has crawed '+ len(useful) + 'IPs')
+    print('this time has crawed ' + str(len(useful)) + 'IPs')
 
-# if __name__ == '__main__'  :
-#     start = datetime.now()
-#     testurl = 'http://www.6vhao.tv/'
-#     Go(testurl)
+
+if __name__ == '__main__'  :
+    #     start = datetime.now()
+    testurl = 'https://www.dy2018.com/'
+    Go(testurl)
 #     endtime = datetime.now()
 #     print("time used %d" %(endtime-start).seconds)

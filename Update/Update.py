@@ -136,6 +136,32 @@ class Update(object):
         while (len(self.resultlist) > 0) or (self.NumThread > 0):
             if len(self.resultlist) > 0:
                 item = self.resultlist.pop()
+                if item[4]:
+                    ObjNum = cursor.execute(
+                        "select id from movie_items where name = '{name}'".
+                        format(name=item[0]))
+                    if ObjNum > 0:
+                        item_id = cursor.fetchone()[0]
+                        LinkNum = cursor.execute(
+                            "select count(link) from movie_links where item_id={id}".
+                            format(id=item_id))
+                        if LinkNum > 0:
+                            LinkNum = cursor.fetchone()[0]
+                            LinkSize = len(item[3])
+                            item[3] = item[3][0:(LinkSize-LinkNum)]
+                    # else:
+                        # try:
+                        #     cursor.execute(
+                        #         'insert into movie_items(name,img,tag,pubdate) values (%s,%s,%s,%s)',
+                        #         (item[0], item[1], item[2], NewSourceDate))
+                        #     id = cursor.lastrowid
+                        #     info = [tuple([each, id]) for each in item[3]]
+                        #     cursor.executemany('insert into movie_links(link,item_id) values (%s,%s)',info)
+                        #     self.connection.commit()
+                        # except Exception as e:
+                        #     self.connection.rollback()
+                        #     logging.error(str(e))
+                # else:
                 try:
                     cursor.execute(
                         'insert into movie_items(name,img,tag,pubdate) values (%s,%s,%s,%s)',
