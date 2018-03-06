@@ -4,7 +4,7 @@ Created on Tue Jan 30 13:16:42 2018
 
 @author:crx
 """
-
+import __init__
 import requests
 from bs4 import BeautifulSoup
 import random
@@ -19,8 +19,10 @@ import pymysql
 import sys, getopt
 import time
 import dy2018Com
-import IPpool_thread, mail
-from setting import rootLogger
+from Util import mail, IPpool_thread
+from Util.setting import rootLogger
+# import IPpool_thread, mail
+# from setting import rootLogger
 
 
 class Url(object):
@@ -86,12 +88,13 @@ class Update(object):
         getpagelinks
         getsource [name,img,tag,link]
     """
-    def __init__(self, url, siteName, SqlConnection,parseIndex,parsePage,NumThread=4):
+    def __init__(self, url, siteName, SqlConnection,parseIndex,parsePage,NumThread=4,cy=5):
         self.url = url
         self.connection = SqlConnection
         self.parseIndex = parseIndex
         self.parsePage = parsePage
         self.NumThread = NumThread
+        self.cycle = cy
         self.MailMsg = '<h2>{site}</h2>'.format(site=siteName)
         self.signal = threading.Event()
         self.condition = threading.Lock()
@@ -117,7 +120,7 @@ class Update(object):
 
     def getpagelinks(self):
         global User_agent_list,ipset
-        cycle = 5
+        cycle = self.cycle
         while cycle > 0:
             proxy = ipset.getip()
             userAgent = random.choice(User_agent_list)
@@ -142,7 +145,7 @@ class Update(object):
             self.condition.release()
 
             url = self.firstlink.get()
-            cycle = 5
+            cycle = self.cycle
             while cycle > 0:
                 proxy = ipset.getip()
                 userAgent = random.choice(User_agent_list)
@@ -205,7 +208,7 @@ class Update(object):
                         cursor.executemany('insert into movie_links(link,item_id) values (%s,%s)',info)
                         self.connection.commit()
                         datasize += 1
-                        self.MailMsg = self.MailMsg + "<h3>{name}</h3><p>{series}</p><img src={href}>".format(
+                        self.MailMsg = self.MailMsg + "<h4>{name}</h4><p>{series}</p><img src={href}>".format(
                             name=item[0], series=UpdateNum, href=item[1])
                     except Exception as e:
                         self.connection.rollback()
@@ -272,7 +275,7 @@ if __name__ == '__main__':
         rootLogger.error(str(e))
         sys.exit(1)
     # open UserAgent list
-    fp_user = open('./user_agent.bi','rb')
+    fp_user = open('../Util/user_agent.bi', 'rb')
     User_agent_list = pickle.load(fp_user)
     fp_user.close()
     # open IP list

@@ -5,25 +5,27 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
 from email.utils import formataddr
- 
+from Util.setting import rootLogger
+
 my_sender='940909850@qq.com'    # 发件人邮箱账号
-my_pass = 'wnmejxuizrudbdfa'               # 发件人邮箱密码 wnmejxuizrudbdfa  dy3344crx0819
-my_user='18056962858@163.com'      # 收件人邮箱账号，我这边发送给自己
-def mail(message):
+my_pass = 'wnmejxuizrudbdfa'    # 发件人邮箱密码 wnmejxuizrudbdfa  dy3344crx0819
+my_user='18056962858@163.com'   # 收件人邮箱账号，我这边发送给自己
+
+def mail(message, subject="爬虫运行情况"):
     ret=True
     try:
         msg=MIMEMultipart('related')
-        msg['From']=formataddr(["爬虫运行情况",my_sender])  # 括号里的对应发件人邮箱昵称、发件人邮箱账号
-        msg['To']=formataddr(["Coder",my_user])              # 括号里的对应收件人邮箱昵称、收件人邮箱账号
-        subject = "爬虫运行情况"
+        msg['From'] = formataddr(["Server",my_sender])     # 括号里的对应发件人邮箱昵称、发件人邮箱账号
+        msg['To']=formataddr(["Coder",my_user])             # 括号里的对应收件人邮箱昵称、收件人邮箱账号
+        # subject = "爬虫运行情况"
         msg['Subject']=Header(subject,'UTF-8')            # 邮件的主题，也可以说是标题
 
-        mail_msg = '\
-			<p>爬虫运行情况</p>\
-			<p>' + message + '</p>'
+        # mail_msg = '\
+        # 	<p>' + subject + '</p>\
+        # 	<p>'+ message + '</p>'
 
 
-        msg.attach(MIMEText(mail_msg,'html','UTF-8'))
+        msg.attach(MIMEText(message, 'html', 'UTF-8'))
         # fp = open(path,'rb')
         # msgImage = MIMEImage(fp.read())
         # fp.close()
@@ -35,8 +37,13 @@ def mail(message):
         server.sendmail(my_sender,[my_user,],msg.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
         server.quit()  # 关闭连接
     except Exception as e:  # 如果 try 中的语句没有执行，则会执行下面的 ret=False
-        print(e)
+        rootLogger.error(str(e))
+        # print(e)
         ret=False
     return ret
 
+
+# mail(
+#     "<h4>niao</h4><img src=https://img.diannao1.com/d/file/p/2018-02-16/387a59e136eb8d6eac5687c032325154.jpg>"
+# )
 # mail("hello 163.com")

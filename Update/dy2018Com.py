@@ -1,9 +1,10 @@
 # www.dy2018.com parse rule
 
+import __init__
 import time
 import re
 import threading
-from setting import rootLogger
+from Util.setting import rootLogger
 import sys
 
 def parseIndex(soup, firstlink):

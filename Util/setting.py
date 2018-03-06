@@ -4,8 +4,9 @@ logging.basicConfig(
     level=logging.ERROR,
     format=
     '%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
-    datefmt='%a %d %b %Y %H:%M:%S', 
-    filemode="a")
+    datefmt='%a %d %b %Y %H:%M:%S',
+    filemode="a",
+    filename='./update.log')
 
 rootLogger = logging.getLogger("root")
 rotateFlieHander = logging.handlers.RotatingFileHandler(
