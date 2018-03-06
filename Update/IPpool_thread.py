@@ -8,7 +8,6 @@ Created on Wed Oct 25 20:52:38 2017
 
 
 import random
-
 import pickle
 import time
 import threading
@@ -16,6 +15,7 @@ import queue
 from datetime import datetime
 from lxml import etree
 import requests
+from setting import rootLogger
 
 
 ipq = queue.Queue()
@@ -28,10 +28,7 @@ fp_user.close()
 class TestIp(threading.Thread):
     def __init__(self,testurl):
         threading.Thread.__init__(self)
-        #        self.ipq = ipq
         self.testurl = testurl
-#        self.User_agent = User_agent_list
-#        self.useful = useful
 
     def run(self):
         global ipq
@@ -75,7 +72,8 @@ def CrawIP():
     global ipq
     for i in range(len(ips)):
         ipq.put(ips[i] + ':' + ports[i])
-    print('Ips have downloaded...')
+    rootLogger.error('Ips have downloaded...')
+    # print('Ips have downloaded...')
     return
 
 def Go(testurl):
@@ -94,7 +92,8 @@ def Go(testurl):
 
     with open("./CrawIP.bi","wb") as fp:
         pickle.dump(useful,fp)
-    print('this time has crawed ' + str(len(useful)) + ' IPs')
+    rootLogger.error('this time has crawed ' + str(len(useful)) + ' IPs')
+    # print('this time has crawed ' + str(len(useful)) + ' IPs')
 
 
 if __name__ == '__main__'  :

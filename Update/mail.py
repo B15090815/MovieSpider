@@ -14,7 +14,7 @@ def mail(message, subject="爬虫运行情况"):
     ret=True
     try:
         msg=MIMEMultipart('related')
-        msg['From'] = formataddr(["DYCoder",my_sender])     # 括号里的对应发件人邮箱昵称、发件人邮箱账号
+        msg['From'] = formataddr(["Server",my_sender])     # 括号里的对应发件人邮箱昵称、发件人邮箱账号
         msg['To']=formataddr(["Coder",my_user])             # 括号里的对应收件人邮箱昵称、收件人邮箱账号
         # subject = "爬虫运行情况"
         msg['Subject']=Header(subject,'UTF-8')            # 邮件的主题，也可以说是标题
@@ -41,7 +41,7 @@ def mail(message, subject="爬虫运行情况"):
     return ret
 
 
-mail(
-    "<h4>niao</h4><img src=https://img.diannao1.com/d/file/p/2018-02-16/387a59e136eb8d6eac5687c032325154.jpg>"
-)
+# mail(
+#     "<h4>niao</h4><img src=https://img.diannao1.com/d/file/p/2018-02-16/387a59e136eb8d6eac5687c032325154.jpg>"
+# )
 # mail("hello 163.com")

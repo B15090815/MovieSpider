@@ -4,13 +4,16 @@ import time
 import re
 import threading
 from setting import rootLogger
+import sys
 
 def parseIndex(soup, firstlink):
     # rootLogger.critical(threading.current_thread().getName() + " parse Index")
     NewSourceDate = time.strftime("%m-%d")
+    # NewSourceDate = '02-28'
     url = 'http://www.dy2018.com'
     try:
         blocks = soup.find_all('div', class_='co_area2')
+        # rootLogger.error(blocks)
         for block in blocks:
             source = block.find('ul').find_all('li')
             for item in source:
@@ -21,6 +24,7 @@ def parseIndex(soup, firstlink):
                     firstlink.put(href)
     except Exception as e:
         rootLogger.error(str(e))
+    # rootLogger.error(str(firstlink.size()))
 
 def parsePage(soup, resultlist):
     # rootLogger.critical(threading.current_thread().getName() + " parse Index")

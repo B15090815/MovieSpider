@@ -23,6 +23,30 @@ import IPpool_thread, mail
 from setting import rootLogger
 
 
+class Url(object):
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.urlList = []
+
+    def get(self):
+        self.lock.acquire()
+        if not self.empty():
+            url = self.urlList.pop()
+        else:
+            url = None
+        self.lock.release()
+        return url
+
+    def put(self, url):
+        self.urlList.append(url)
+
+    def empty(self):
+        return len(self.urlList) < 1
+
+    def size(self):
+        return len(self.urlList)
+
+
 class Ipset():
     """
     ip is a list:[ipAddr, True]
@@ -32,10 +56,9 @@ class Ipset():
     def __init__(self,ip):
         self.ipset = ip
         self.lock = threading.RLock()
-        self.size = len(ip)
-        self.index = -1
+
     def empty(self):
-        return self.size < 1
+        return len(self.ipset) < 1
 
     def getip(self):
         self.lock.acquire()
@@ -44,13 +67,11 @@ class Ipset():
         else:
             ip = random.choice(self.ipset)
             self.ipset.remove(ip)
-            self.size -= 1
         self.lock.release()
         return ip
 
     def releaseip(self,ip):
         self.ipset.append(ip)
-        self.size += 1
 
     def output(self):
         print(self.ipset)
@@ -67,79 +88,92 @@ class Update(object):
     """
     def __init__(self, url, siteName, SqlConnection,parseIndex,parsePage,NumThread=4):
         self.url = url
-        self.name = siteName
         self.connection = SqlConnection
         self.parseIndex = parseIndex
         self.parsePage = parsePage
         self.NumThread = NumThread
         self.MailMsg = '<h2>{site}</h2>'.format(site=siteName)
         self.signal = threading.Event()
+        self.condition = threading.Lock()
         self.resultlist = []
-        self.firstlink = queue.Queue()
+        self.firstlink = Url()
 
-    def download(self, url, cy=5):
-        cycle = cy
-        global User_agent_list,ipset
-        while cycle > 0:
-            proxy = ipset.getip()
-            if proxy is None:
-                return None
-            proxies = {'http':'http://'+proxy,'https':'https://'+proxy}
-            headers = {'User-Agent':random.choice(User_agent_list)}
-            try:
-                r = requests.get(url, headers=headers,proxies=proxies,timeout=1)
-                if r.status_code == 200:
-                    break
-            except Exception:
-                cycle -= 1
-                time.sleep(2)
-            finally:
-                ipset.releaseip(proxy)
-
-        if cycle > 0 and len(r.text) > 100:
-
-            # rootLogger.critical(threading.current_thread().getName() +
-            # " downloading via " + proxy)
-            r.encoding = chardet.detect(r.content)['encoding']
-            return r.text
-        else:
-            # rootLogger.error('fail to craw the page url from ' + self.name)
+    def download(self, url, proxy, user_agent):
+        if proxy is None:
             return None
+        proxies = {'http':'http://'+proxy,'https':'https://'+proxy}
+        headers = {'User-Agent': user_agent}
+        try:
+            r = requests.get(url, headers=headers,proxies=proxies,timeout=2)
+            if r.status_code == 200:
+                if len(r.text) > 100:
+                    r.encoding = chardet.detect(r.content)['encoding']
+                    return r.text
+                else:
+                    return None
+        except Exception:
+            return None
+
 
     def getpagelinks(self):
-        html = self.download(self.url)
-        if html is None:
-            return None
-        soup = BeautifulSoup(html,'lxml')
-        self.parseIndex(soup,self.firstlink)
+        global User_agent_list,ipset
+        cycle = 5
+        while cycle > 0:
+            proxy = ipset.getip()
+            userAgent = random.choice(User_agent_list)
+            html = self.download(self.url,proxy,userAgent)
+            ipset.releaseip(proxy)
+            if html is None:
+                cycle -= 1
+                time.sleep(2)
+            else:
+                soup = BeautifulSoup(html,'lxml')
+                self.parseIndex(soup,self.firstlink)
+                break
 
     def getsource(self):
-        while not self.firstlink.empty():
+        while True:
+            # rootLogger.error("getsource working...")
+            self.condition.acquire()
+            if self.firstlink.empty():
+                self.NumThread = self.NumThread - 1
+                self.condition.release()
+                break
+            self.condition.release()
+
             url = self.firstlink.get()
-            self.firstlink.task_done()
-            rootLogger.error(threading.current_thread().getName()+" getsource working...")
-            html = self.download(url)
-            if html is None:
-                return None
-            soup = BeautifulSoup(html, 'lxml')
-            self.parsePage(soup,self.resultlist)
-        self.NumThread = self.NumThread - 1
+            cycle = 5
+            while cycle > 0:
+                proxy = ipset.getip()
+                userAgent = random.choice(User_agent_list)
+                html = self.download(url, proxy, userAgent)
+                ipset.releaseip(proxy)
+                if html is None:
+                    cycle -= 1
+                    time.sleep(2)
+                else:
+                    soup = BeautifulSoup(html, 'lxml')
+                    self.parsePage(soup, self.resultlist)
+                    break
+
         rootLogger.critical(threading.current_thread().getName() + " exited")
 
     def output(self):
-        # global NumOutput
+        global datasize
         cursor = self.connection.cursor()
-        # sqlLock = threading.Lock()
         UpdateNum = 0
         item_id = 0
         NewSourceDate = time.strftime("%Y-%m-%d")
-        while (len(self.resultlist) > 0) or (self.NumThread > 0):
-            rootLogger.error(threading.current_thread().getName()+" output working...")
-            if len(self.resultlist) > 0:
+        time.sleep(6)
+        while True:
+            # rootLogger.error(threading.current_thread().getName()+" output working...")
+            while len(self.resultlist) > 0:
+                # rootLogger.error(" output working...")
                 item = self.resultlist.pop()
+                item_id = 0
                 if item[4]:
-                    # sqlLock.acquire()
-                    # item_id = 0
+                    # pass
+                    # 检测该影视条目是否存在，若存在则判断资源链接数目是否大于
                     ObjNum = cursor.execute(
                         "select id from movie_items where name = '{name}'".
                         format(name=item[0]))
@@ -155,11 +189,7 @@ class Update(object):
                             item[3] = item[3][0:Inc]
                             UpdateNum = Inc + LinkNum
                             UpdateNum = "更新至第" +str(UpdateNum) + "集"
-                        else:
-                            UpdateNum = "此次增加" + str(len(item[3])) + "数据"
-                    else:
-                        item_id = 0
-                    # sqlLock.release()
+
 
                 if len(item[3]) > 0:
                     try:
@@ -174,25 +204,34 @@ class Update(object):
                         info = [tuple([each, id]) for each in item[3]]
                         cursor.executemany('insert into movie_links(link,item_id) values (%s,%s)',info)
                         self.connection.commit()
+                        datasize += 1
                         self.MailMsg = self.MailMsg + "<h3>{name}</h3><p>{series}</p><img src={href}>".format(
                             name=item[0], series=UpdateNum, href=item[1])
                     except Exception as e:
                         self.connection.rollback()
                         rootLogger.error(str(e))
+
+            if self.NumThread == 0:
+                break
+            else:
+                time.sleep(2)
+
         self.signal.set()
-        rootLogger.critical(threading.current_thread().getName() + " exited")
+        # rootLogger.critical(threading.current_thread().getName() + " exited")
         # rootLogger.critical(threading.current_thread().getName()+" working result:" + str(len(self.resultlist)) + " Numthread:"+str(self.NumThread)+" qsize:"+str(self.firstlink.qsize()))
 
     def sendEmai(self):
         self.signal.wait()
         NewSourceDate = time.strftime("%Y-%m-%d")
-        mail.mail(self.MailMsg,subject=NewSourceDate + " 电影更新情况")
+        subject = NewSourceDate + " 电影更新情况"
+        self.MailMsg += "<h1>今日更新{datasize}条数据</h1>".format(datasize=datasize)
+        mail.mail(self.MailMsg, subject=subject)
 
     def run(self):
         self.getpagelinks()
         if self.firstlink.empty():
             self.signal.set()
-            self.MailMsg = self.MailMsg + "<p>今天没有资源更新</p>"
+            self.MailMsg = self.MailMsg + "<p>今天还没有资源更新</p>"
             self.sendEmai()
             return
         num = self.NumThread
@@ -207,12 +246,13 @@ class Update(object):
         m.start()
 
 
+
 if __name__ == '__main__':
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hiIu:")
     except getopt.GetoptError:
         sys.exit(2)
-    testUrl = 'https://www.baidu.com/'
+    testUrl = 'http://www.dy2018.com'
     for opt, agr in opts:
         if opt == "-i":
             IPpool_thread.Go(testUrl)
@@ -245,12 +285,9 @@ if __name__ == '__main__':
     ipset = Ipset(IPpool)
     IPpool = None  # release IPpool due to it has used
 
-    # NumOutput = 1
-    # MailMsg = ''
+    datasize = 0
     # 电影天堂
     url = 'http://www.dy2018.com'
     siteName = '电影天堂'
     Dy2018 = Update(url, siteName, conn, dy2018Com.parseIndex, dy2018Com.parsePage)
     Dy2018.run()
-
-    # print("It's done")

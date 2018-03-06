@@ -125,7 +125,7 @@ class Movieurl():
         self.url = set()
 
     def empty(self):
-        return len(self.url) <1
+        return len(self.url) < 1
 
     def geturl(self):
         if self.empty():
