@@ -21,8 +21,7 @@ import time
 import dy2018Com
 from Util import mail, IPpool_thread
 from Util.setting import rootLogger
-# import IPpool_thread, mail
-# from setting import rootLogger
+
 
 
 class Url(object):
@@ -227,14 +226,14 @@ class Update(object):
         self.signal.wait()
         NewSourceDate = time.strftime("%Y-%m-%d")
         subject = NewSourceDate + " 电影更新情况"
-        self.MailMsg += "<h1>今日更新{datasize}条数据</h1>".format(datasize=datasize)
+        self.MailMsg += "<br><h1>今日更新{datasize}条数据</h1>".format(datasize=datasize)
         mail.mail(self.MailMsg, subject=subject)
 
     def run(self):
         self.getpagelinks()
         if self.firstlink.empty():
             self.signal.set()
-            self.MailMsg = self.MailMsg + "<p>今天还没有资源更新</p>"
+            self.MailMsg = self.MailMsg + "<h3>今天还没有资源更新</h3>"
             self.sendEmai()
             return
         num = self.NumThread
@@ -268,9 +267,9 @@ if __name__ == '__main__':
             print("-h useage\n-i for update IP\n-u for testUrl")
             sys.exit()
     try:
-        print('connecting mysql...')
+        rootLogger.critical('connecting mysql...')
         conn = pymysql.connect(host='127.0.0.1',port=3306,user='root',passwd='admin',db='movie',charset='utf8')
-        print("connect mysql success...")
+        rootLogger.critical("connect mysql success...")
     except Exception as e:
         rootLogger.error(str(e))
         sys.exit(1)

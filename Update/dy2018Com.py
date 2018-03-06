@@ -5,7 +5,6 @@ import time
 import re
 import threading
 from Util.setting import rootLogger
-import sys
 
 def parseIndex(soup, firstlink):
     # rootLogger.critical(threading.current_thread().getName() + " parse Index")
