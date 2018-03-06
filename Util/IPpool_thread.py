@@ -12,7 +12,7 @@ import queue
 from datetime import datetime
 from lxml import etree
 import requests
-from Util.setting import rootLogger
+from setting import rootLogger
 
 
 ipq = queue.Queue()
@@ -71,7 +71,7 @@ def CrawIP():
     # print('Ips have downloaded...')
     return
 
-def Go(testurl):
+def Go(testurl, filename="./CrawIP.bi"):
     CrawIP()
     threads = []
     for i in range(4):
@@ -82,7 +82,7 @@ def Go(testurl):
     for thread in threads:
         thread.join()
 
-    with open("./CrawIP.bi","wb") as fp:
+    with open(filename, "wb") as fp:
         pickle.dump(useful,fp)
     rootLogger.error('this time has crawed ' + str(len(useful)) + ' IPs')
     # print('this time has crawed ' + str(len(useful)) + ' IPs')

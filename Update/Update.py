@@ -5,6 +5,7 @@ Created on Tue Jan 30 13:16:42 2018
 @author:crx
 """
 import __init__
+# import os
 import requests
 from bs4 import BeautifulSoup
 import random
@@ -20,8 +21,7 @@ import sys, getopt
 import time
 import dy2018Com
 from Util import mail, IPpool_thread
-from Util.setting import rootLogger
-
+from setting import rootLogger
 
 
 class Url(object):
@@ -195,19 +195,19 @@ class Update(object):
 
                 if len(item[3]) > 0:
                     try:
-                        if item_id == 0:
-                            cursor.execute(
-                                'insert into movie_items(name,img,tag,pubdate) values (%s,%s,%s,%s)',
-                                (item[0], item[1], item[2], NewSourceDate))
-                            id = cursor.lastrowid
-                            UpdateNum = "有" + str(len(item[3])) + "条下载链接"
-                        else:
-                            id = item_id
-                        info = [tuple([each, id]) for each in item[3]]
-                        cursor.executemany('insert into movie_links(link,item_id) values (%s,%s)',info)
-                        self.connection.commit()
+                        # if item_id == 0:
+                        #     cursor.execute(
+                        #         'insert into movie_items(name,img,tag,pubdate) values (%s,%s,%s,%s)',
+                        #         (item[0], item[1], item[2], NewSourceDate))
+                        #     id = cursor.lastrowid
+                        #     UpdateNum = "有" + str(len(item[3])) + "条下载链接"
+                        # else:
+                        #     id = item_id
+                        # info = [tuple([each, id]) for each in item[3]]
+                        # cursor.executemany('insert into movie_links(link,item_id) values (%s,%s)',info)
+                        # self.connection.commit()
                         datasize += 1
-                        self.MailMsg = self.MailMsg + "<h4>{name}</h4><p>{series}</p><img src={href}>".format(
+                        self.MailMsg = self.MailMsg + "<h4>{name}</h4><span>{series}</span><img src={href}>".format(
                             name=item[0], series=UpdateNum, href=item[1])
                     except Exception as e:
                         self.connection.rollback()

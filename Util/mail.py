@@ -5,7 +5,7 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
 from email.utils import formataddr
-from Util.setting import rootLogger
+from setting import rootLogger
 
 my_sender='940909850@qq.com'    # 发件人邮箱账号
 my_pass = 'wnmejxuizrudbdfa'    # 发件人邮箱密码 wnmejxuizrudbdfa  dy3344crx0819
