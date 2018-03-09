@@ -3,6 +3,7 @@ import time
 from urllib import request
 # from PIL import Image
 from selenium import webdriver
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 '''
 爬取自己 QQ 空间所有照片
 不怎么用 QQ 空间， 但是舍不得空间的照片，一张一张下载太慢，所以按照相册趴下来硬盘留念
@@ -40,6 +41,7 @@ class SpiderSelenium(object):
         接着通过判断页面是否存在 id 为 QM_OwnerInfo_ModifyIcon 的元素来验证是否登录成功
         :return: 登录成功返回 True，反之
         '''
+        self.driver.get('https://qzone.qq.com/')
         self.driver.switch_to.frame('login_frame')
         self.driver.find_element_by_id('switcher_plogin').click()
         self.driver.find_element_by_id('u').clear()
@@ -48,7 +50,7 @@ class SpiderSelenium(object):
         self.driver.find_element_by_id('p').send_keys(self.pwd)
         self.driver.find_element_by_id('login_button').click()
         try:
-            self.driver.find_element_by_id('QM_OwnerInfo_ModifyIcon')
+            # self.driver.find_element_by_id('QM_OwnerInfo_ModifyIcon')
             return True
         except:
             return False
@@ -105,20 +107,20 @@ class SpiderSelenium(object):
             time.sleep(10)
             index += 1
 
-    # def crawl_pictures(self):
-    #     '''
-    #     开始爬取 QQ 空间相册里图片
-    #     '''
-    #     self.driver.get('http://user.qzone.qq.com/{0}/photo'.format(self.qq))
-    #     self.driver.implicitly_wait(20)
-    #     if self._need_login():
-    #         if self._login():
-    #             self._get_gallery_list(self._download_save_pic)
-    #             print("========== QQ " + str(self.qq) + " 的相册爬取下载结束 ===========")
-    #         else:
-    #             print('login with '+str(self.qq)+' failed, please check your account and password!')
-    #     else:
-    #         print('already login with '+str(self.qq))
+    def crawl_pictures(self):
+        '''
+        开始爬取 QQ 空间相册里图片
+        '''
+        self.driver.get('http://user.qzone.qq.com/{0}'.format(self.qq))
+        self.driver.implicitly_wait(20)
+        if self._need_login():
+            if self._login():
+                # self._get_gallery_list(self._download_save_pic)
+                print("========== QQ " + str(self.qq) + " 的相册爬取下载结束 ===========")
+            else:
+                print('login with '+str(self.qq)+' failed, please check your account and password!')
+        else:
+            print('already login with '+str(self.qq))
 
     # def _download_save_pic(self, gallery_title, pic_url):
     #     '''
@@ -148,7 +150,5 @@ class SpiderSelenium(object):
 
 if __name__ == '__main__':
     a = SpiderSelenium('2303918638', 'crx0819')
-    if a._login():
-        print('success')
-    else:
-        print('fail...')
+    print(a._login())
+    # a.crawl_pictures()
