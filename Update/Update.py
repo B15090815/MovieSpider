@@ -174,7 +174,6 @@ class Update(object):
                 item = self.resultlist.pop()
                 item_id = 0
                 if item[4]:
-                    # pass
                     # 检测该影视条目是否存在，若存在则判断资源链接数目是否大于
                     ObjNum = cursor.execute(
                         "select id from movie_items where name = '{name}'".
@@ -196,22 +195,21 @@ class Update(object):
                 if len(item[3]) > 0:
                     try:
                         if item_id == 0:
-                            pass
-                            # cursor.execute(
-                            #     'insert into movie_items(name,img,tag,pubdate) values (%s,%s,%s,%s)',
-                            #     (item[0], item[1], item[2], NewSourceDate))
-                            # id = cursor.lastrowid
-                            # UpdateNum = "有" + str(len(item[3])) + "条下载链接"
+                            cursor.execute(
+                                'insert into movie_items(name,img,tag,pubdate) values (%s,%s,%s,%s)',
+                                (item[0], item[1], item[2], NewSourceDate))
+                            id = cursor.lastrowid
+                            UpdateNum = "有" + str(len(item[3])) + "条下载链接"
                         else:
                             id = item_id
                         info = [tuple([each, id]) for each in item[3]]
-                        # cursor.executemany('insert into movie_links(link,item_id) values (%s,%s)',info)
-                        # self.connection.commit()
+                        cursor.executemany('insert into movie_links(link,item_id) values (%s,%s)',info)
+                        self.connection.commit()
                         datasize += 1
                         self.MailMsg = self.MailMsg + "<h4>{name}</h4><span>{series}</span><img src={href}>".format(
                             name=item[0], series=UpdateNum, href=item[1])
                     except Exception as e:
-                        # self.connection.rollback()
+                        self.connection.rollback()
                         rootLogger.error(str(e))
 
             if self.NumThread == 0:
