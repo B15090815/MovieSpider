@@ -217,7 +217,7 @@ class Update(object):
                 break
             else:
                 time.sleep(2)
-
+        self.connection.close()
         self.signal.set()
         # rootLogger.critical(threading.current_thread().getName() + " exited")
         # rootLogger.critical(threading.current_thread().getName()+" working result:" + str(len(self.resultlist)) + " Numthread:"+str(self.NumThread)+" qsize:"+str(self.firstlink.qsize()))
